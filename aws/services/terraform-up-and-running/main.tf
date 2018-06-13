@@ -36,7 +36,7 @@ data "template_file" "user_data_new" {
 }
 
 resource "aws_launch_configuration" "example" {
-  name_prefix     = "${var.cluster_name}-launch-configuration-"
+  name_prefix     = "${var.cluster_name}-"
   image_id        = "${var.ami}"
   instance_type   = "${var.instance_type}"
   security_groups = ["${aws_security_group.example_instance.id}"]
@@ -49,19 +49,24 @@ resource "aws_launch_configuration" "example" {
 }
 
 resource "aws_autoscaling_group" "example_instance" {
-  name                 = "${var.cluster_name}-autoscaling-group"
+  name                 = "${var.cluster_name}-${aws_launch_configuration.example.name}"
   launch_configuration = "${aws_launch_configuration.example.id}"
   availability_zones   = ["${data.aws_availability_zones.all.names}"]
 
   load_balancers    = ["${aws_elb.example.name}"]
   health_check_type = "ELB"
 
-  min_size = "${var.cluster_min_size}"
-  max_size = "${var.cluster_max_size}"
+  min_size         = "${var.cluster_min_size}"
+  max_size         = "${var.cluster_max_size}"
+  min_elb_capacity = "${var.cluster_min_size}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   tag {
     key                 = "Name"
-    value               = "${var.cluster_name}-autoscaling-group"
+    value               = "${var.cluster_name}"
     propagate_at_launch = true
   }
 }
@@ -85,6 +90,10 @@ resource "aws_elb" "example" {
     interval            = 30
     target              = "HTTP:${var.server_port}/"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_security_group" "example_instance" {
@@ -103,6 +112,10 @@ resource "aws_security_group_rule" "allow_server_port_inbound" {
 
 resource "aws_security_group" "example_elb" {
   name = "${var.cluster_name}-elb-security-group"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_security_group_rule" "allow_http_inbound" {

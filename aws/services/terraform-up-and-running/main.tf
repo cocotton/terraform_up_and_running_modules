@@ -18,6 +18,7 @@ data "template_file" "user_data" {
 
   vars {
     server_port      = "${var.server_port}"
+    server_text      = "${var.server_text}"
     database_address = "${data.terraform_remote_state.example_database.address}"
     database_port    = "${data.terraform_remote_state.example_database.port}"
   }
@@ -30,12 +31,13 @@ data "template_file" "user_data_new" {
 
   vars {
     server_port = "${var.server_port}"
+    server_text = "${var.server_text}"
   }
 }
 
 resource "aws_launch_configuration" "example" {
-  name            = "${var.cluster_name}-launch-configuration"
-  image_id        = "ami-a4dc46db"
+  name_prefix     = "${var.cluster_name}-launch-configuration-"
+  image_id        = "${var.ami}"
   instance_type   = "${var.instance_type}"
   security_groups = ["${aws_security_group.example_instance.id}"]
 

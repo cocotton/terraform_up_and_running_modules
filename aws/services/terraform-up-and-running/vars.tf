@@ -2,6 +2,10 @@ variable "cluster_name" {
   description = "The name to use for all the cluster resources"
 }
 
+variable "enable_new_user_data" {
+  description = "If set to true, use the new User Data script"
+}
+
 variable "server_port" {
   description = "The port the servier will use for HTTP requests"
   default     = 8080
